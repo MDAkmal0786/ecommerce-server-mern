@@ -29,9 +29,9 @@ export  const myCache = new  NodeCache(); // caching
   
 
 
-let uri  = process.env.MONGO_URI||"mongodb://localhost:27017/";
+let uri  = process.env.MONGO_URI;
 
-connectDB(uri) ; // connect to string and crate Ecommerce_24 database instance
+connectDB(uri!) ; // connect to string and crate Ecommerce_24 database instance
 
 const port=    Number(process.env.PORT) || 4002  
 
