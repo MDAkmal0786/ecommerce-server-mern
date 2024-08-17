@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node dist/app.js",
-    "build": "tsc.cmd",
-    "watch": "tsc.cmd -w",
+    "build": "tsc",
+    "watch": "tsc -w",
     "dev": "nodemon dist/app.js"
   },
   "author": "",
