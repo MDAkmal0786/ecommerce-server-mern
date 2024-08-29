@@ -7,39 +7,51 @@ import { rm } from "fs";
 //import {faker} from "@faker-js/faker"
 import { myCache } from "../app.js";
 import { invalidateCache } from "../utils/features.js";
-import { error } from "console";
-
+import  cloudinary  from "../utils/cloudinary.js";
 
 export const newProduct = tryCatch(
     async(req:Request<{},{},NewProductRequestBody>,res:Response , next:NextFunction)=>{
 
         
 // real file from form-body will be populated in request (req.file) by multer
-          // and stored in upload folder
 
+          
+           
           let {name , price , category , stock } = req.body ;    //    F O R M    DATA AS BODY for multer pick image and process 
 
-          const photo = req.file;  
-          if ( !photo )
-          {
-            return next ( new ErrorHandler("please add photo" , 400 ) ) ;
-          }
+          const photo = req.file;   // populated photo through multer
+          
 
-          if (  !name || !price || !category || !stock ) {
+          if (  !name || !price || !category || !stock || !photo ) {
 
-            rm( photo.path , ()=>{     // actully photo if there ..then stores in folder by multer .. regardless if other item are not proided 
-              //so remove
-              console.log("deleted");
-            } ) ;
             return next( new ErrorHandler("please add all feilds" , 400 ) ) ;
           }
+
+
+     // add phot to cloudaniry
+   
+
+     const uploadResult = await cloudinary.uploader.upload(
+           photo.path
+       )
+       .catch((error) => {
+        console.log(error.message);
+        return next( new ErrorHandler("cloudinary upload issue" , 400 ) )
+       });
+
+
+
+
+
+
+
 
           let product = await Product.create ( {
                name ,
                price  ,
                stock ,
                category:category.toLowerCase() ,
-                photo:photo?.path
+                photo:uploadResult?.url,
             });  // mongo store string  so store the path eg. uploads/cover.png
 
            await  invalidateCache( { product:true, admin:true}  ) ;
@@ -202,14 +214,39 @@ export const updateProduct = tryCatch(
       return next ( new ErrorHandler ( "product not found" , 404 ) ) ;
   }
 
-     let{name , price  , category , stock} = req.body;
+     let { name , price  , category , stock } = req.body;
      let photo=req.file;
      if ( photo ) {
-      rm(product.photo , ()=>{  // dlete prev photo refernece from mogodb
-        console.log("old photo deleted");
-      })
 
-      product.photo=photo.path ;    // change mongodb photo instance 
+
+      let a = product.photo.split('/').pop() ;
+      let public_id=a?.split('.')[0];
+     
+  
+     try {
+      const result = await cloudinary.uploader.destroy(public_id!) ;
+     
+    } catch (error) {
+      console.error(error);
+      return next( new ErrorHandler("cloudinary dlete issue" , 400 ) )
+    }
+      
+
+
+      //dlete prev url form cloudaniry
+
+
+
+      
+      const uploadResult = await cloudinary.uploader.upload(
+        photo.path
+    )
+    .catch((error) => {
+     console.log(error.message);
+     return next( new ErrorHandler("cloudinary upload issue" , 400 ) )
+    });
+
+      product.photo=uploadResult?.url! ;    // change mongodb photo instance 
 
      }
      if ( name )product.name=name ;
@@ -249,10 +286,24 @@ export const deletedProduct = tryCatch (
          return next( new ErrorHandler( "product not found" , 404 ) ) ;
      }
 
+
+      //delete cloudanry hosted image by public key from url
+
+
+      let a = product.photo.split('/').pop() ;
+      let public_id=a?.split('.')[0];
   
-     rm(product.photo , ()=>{
-      console.log("photo of user also deleted "); /// remove photo from upload folder as well
-     }) // with refernec mongodb photo path
+     try {
+      const result = await cloudinary.uploader.destroy(public_id!) ;
+     
+    } catch (error) {
+      console.error(error);
+      return next( new ErrorHandler("cloudinary dlete issue" , 400 ) )
+    }
+
+
+
+
 
      await product.deleteOne();
 

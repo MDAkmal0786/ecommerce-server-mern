@@ -15,15 +15,14 @@ import cors from "cors"
 
 config({  // connnecting env file   whatever varibale are not static rather from  E N V   file
     path:"./.env"
-
 })
 
 let stripeKey = process.env.STRIPE_KEY!    // apikey of account
 
-export const stripe = new Stripe(stripeKey);   // stripe payment configuration
+export const stripe = new Stripe(stripeKey) ;   // stripe payment configuration
 
 
-export  const myCache = new  NodeCache(); // caching
+export  const myCache = new  NodeCache() ; // caching
 
 
   
@@ -34,7 +33,6 @@ let uri  = process.env.MONGO_URI;
 connectDB(uri!) ; // connect to string and crate Ecommerce_24 database instance
 
 const port=    Number(process.env.PORT) || 4002  
-
 
 
 const app = express() ;
@@ -51,9 +49,7 @@ app.use("/api/v1/payment"   , paymentRoute);
 app.use("/api/v1/dashboard"   , statsRoute);
 
 
-  
-
- app.use("/uploads" , express.static("uploads"));  // to allow upload folder to be static so that we can access it by going to its directory (rather treating it as an API/route) eg.  localhost:3001/uploads/cover.png 
+   
 
 app.use(errorMiddleware) ; //error handlingmiddleware  works in last for every route guided by next( error)
 

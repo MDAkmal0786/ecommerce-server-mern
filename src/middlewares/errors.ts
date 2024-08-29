@@ -22,6 +22,8 @@ export const errorMiddleware = ( err : ErrorHandler , req:Request , res:Response
   
     }
 
+  
+
 
     return res.status(err.statusCode).json(
       {
